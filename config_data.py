@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 
 flags = tf.flags
-flags.DEFINE_string("config_data", "config_data_nba", "The data config.")
+flags.DEFINE_string("dataset", "nba", "The data config.")
 
 # load all entities
 if 'nba' in flags.config_data:

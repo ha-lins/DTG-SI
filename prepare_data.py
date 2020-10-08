@@ -47,7 +47,7 @@ flags.DEFINE_bool(
     "models and False for cased models.")
 flags.DEFINE_string(
     "expr_name", "rule",
-    "The output directory where manip.py generate")
+    "The output directory where main_ours.py generate")
 flags.DEFINE_string(
     "step", "0",
     "The step to compute two scores")

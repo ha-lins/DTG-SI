@@ -18,7 +18,8 @@ from utils import *
 from ie import get_precrec
 
 flags = tf.flags
-flags.DEFINE_string("config_data", "config_data_nba", "The data config.")
+flags.DEFINE_string("dataset", "nba", "The dataset.")
+flags.DEFINE_string("config_data", "config_data", "The data config.")
 flags.DEFINE_string("config_model", "config_model_clean", "The model config.")
 flags.DEFINE_string("config_train", "config_train", "The training config.")
 flags.DEFINE_float("rec_w", 0.8, "Weight of reconstruction loss.")
@@ -529,9 +530,7 @@ def main():
         for i in range(1, 2):
             refs_ = list(map(lambda ref: ref[i:i+1], refs))
             ents_ = list(map(lambda ent: ent[i:i+1], entrys))
-            #print('===========refs_ is :{}'.format(refs_[:10]))
             entrys = list(zip(*entrys))
-            #bleu = corpus_bleu(refs_, ents_, hypos, entrys[0])
             bleu = corpus_bleu(refs_, hypos)
             print('==========={}: {:.2f}'.format(get_bleu_name(i), bleu))
             bleus.append(bleu)

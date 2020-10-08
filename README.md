@@ -52,28 +52,24 @@ mv e2e_data/ ../e2e_data
 The following command illustrates how to run an experiment:
 
 ```bash
-python3 manip.py --attn_x --attn_y_ --copy_x --rec_w 0.8 --coverage --exact_cover_w 2.5 --expr_name ${EXPR_NAME}
+python3 manip.py --copy_x --rec_w 0.8 --coverage --exact_cover_w 2.5 --save_path ${save_path}
 ```
 
-Where `${EXPR_NAME}` is the directory you'd like to store all the files related to your experiment, e.g. `my_expr`.
+Where `${save_path}` is the directory you'd like to store all the files related to your experiment, e.g. `my_expr`.
 
 Note that the code will automatically restore from the previously saved latest checkpoint if it exists.
 
 You can start Tensorboard in your working directory and watch the curves and $\textrm{BLEU}(\hat{y}, y')$.
 
-For the template-based baseline:
-```bash
-python3 manip_rule.py --expr_name ${EXPR_NAME}
-```
 
 For the MAST baseline:
 ```bash
-python3 manip_baseline.py --attn_x --attn_y_ --bt_w 0.1 --expr_name ${EXPR_NAME}
+python3 manip_baseline.py --attn_x --attn_y_ --bt_w 0.1 --save_path ${save_path}
 ```
 
 For the AdvST baseline:
 ```bash
-python3 manip_baseline.py --attn_x --attn_y_ --bt_w 1 --adv_w 0.5 --expr_name ${EXPR_NAME}
+python3 manip_baseline.py --attn_x --attn_y_ --bt_w 1 --adv_w 0.5 --save_path ${save_path}
 ```
 
 ## evaluate IE scores
@@ -84,7 +80,7 @@ After trained your model, you may want to evaluate IE (Information Retrieval) sc
 CUDA_VISIBLE_DEVICES=${GPUIDS}$ python3 ie.py --gold_file nba_data/gold.${STAGE}.txt --ref_file nba_data/nba.sent_ref.${STAGE}.txt ${EXPR_NAME}/ckpt/hypo*.test.txt
 ```
 
-which needs about 5 GPUS to run IE models for all `${EXPR_NAME}/ckpt/hypo*.test.txt`. `${STAGE}` can be val or test depending on which stage you want to evaluate. The result will be appended to `${EXPR_NAME}/ckpt/ie_results.${STAGE}.txt`, in which the columns represents training steps, $\textrm{BLEU}(\hat{y}, y')$, IE precision, IE recall, simple precision and simple recall (you don't have to know what simple precision/recall is), respectively.
+which needs about 5 GPUS to run IE models for all `${save_path}/ckpt/hypo*.test.txt`. `${STAGE}` can be val or test depending on which stage you want to evaluate. The result will be appended to `${EXPR_NAME}/ckpt/ie_results.${STAGE}.txt`, in which the columns represents training steps, $\textrm{BLEU}(\hat{y}, y')$, IE precision, IE recall, simple precision and simple recall (you don't have to know what simple precision/recall is), respectively.
 
 ## evaluate Content scores
 
@@ -94,12 +90,12 @@ After trained your model, you may want to evaluate two content scores via Bert c
 Run the following cmd to prepare data for evaluation:
 
 ```bash
-python3 prepare_data.py --expr_name ${EXPR_NAME} --step ${step}
+python3 prepare_data.py --save_path ${save_path} --step ${step}
 [--max_seq_length=128]
 [--vocab_file=bert_config/all.vocab.txt]
 [--tfrecord_output_dir=bert/E2E] 
 ```
-which processes the previous `${EXPR_NAME}/ckpt/hypos${step}.valid.txt` into the above mentioned `x | y` fomat in TFRecord data files. Here:
+which processes the previous `${save_path}/ckpt/hypos${step}.valid.txt` into the above mentioned `x | y` fomat in TFRecord data files. Here:
 
 * `max_seq_length`: The maxium length of sequence. This includes BERT special tokens that will be automatically added. Longer sequence will be trimmed.
 * `vocab_file`: Path to a vocabary file used for tokenization. 

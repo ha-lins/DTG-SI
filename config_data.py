@@ -1,6 +1,16 @@
 import os
+import tensorflow as tf
 
-dataset_dir = 'e2ev14_demo'#'e2ev14_demo'#'e2e_0512_max5'
+flags = tf.flags
+flags.DEFINE_string("config_data", "config_data_nba", "The data config.")
+
+# load all entities
+if 'nba' in flags.config_data:
+    dataset_dir = 'nba_data'
+elif 'e2e' in flags.config_data:
+    dataset_dir = 'e2e_data'
+else:
+    print('[info] You need to choose one dataset.')
 
 modes = ['train', 'val', 'test']
 mode_to_filemode = {
@@ -24,7 +34,7 @@ eval_batch_size = 32
 batch_sizes = {
     'train': train_batch_size,
     'val': eval_batch_size,
-    'test': 1, #eval_batch_size,
+    'test': eval_batch_size,
 }
 
 datas = {
@@ -36,9 +46,9 @@ datas = {
         'datasets': [
             {
                 'files': [os.path.join(
-                        dataset_dir, mode,
-                        '{}.{}.txt'.format(field, mode_to_filemode[mode])
-                    )],
+                    dataset_dir, mode,
+                    '{}.{}.txt'.format(field, mode_to_filemode[mode])
+                )],
                 'vocab_file': os.path.join(
                     dataset_dir,
                     '{}.vocab.txt'.format(field_to_vocabname[field])),

@@ -26,7 +26,6 @@ from utils import corpus_bleu, read_sents_from_file
 
 data2text_dir = "data2text"
 
-
 def get_step_number(filename, verbose=False):
     basename = os.path.basename(filename)
     basename_parts = basename.split(".")

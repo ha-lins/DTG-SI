@@ -1,4 +1,4 @@
-from utils_e2e import get_scope_name_of_train_op
+from utils import get_scope_name_of_train_op
 
 max_epochs = int(12)  # int(0)
 steps_per_eval = int(985)

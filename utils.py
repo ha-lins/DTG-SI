@@ -9,17 +9,22 @@ from __future__ import print_function
 import collections
 import os
 import texar as tx
+import tensorflow as tf
 from tensorflow.contrib.seq2seq import tile_batch
 from data2text.data_utils import get_train_ents, extract_entities, extract_numbers
 
+flags = tf.flags
+flags.DEFINE_string("config_data", "config_data_nba", "The data config.")
 
 # load all entities
-all_ents, players, teams, cities = get_train_ents(path=os.path.join("data2text", "rotowire"), connect_multiwords=True)
-# all_ents = set()
-# with open('e2e_data/x_value.vocab.txt', 'r') as f:
-#     all_vocb = f.readlines()
-#     for vocab in all_vocb:
-#         all_ents.add(vocab.strip('\n'))
+if 'nba' in flags.config_data:
+    all_ents, _, _, _ = get_train_ents(path=os.path.join("data2text", "rotowire"), connect_multiwords=True)
+else:
+    all_ents = set()
+    with open('e2e_data/x_value.vocab.txt', 'r') as f:
+        all_vocb = f.readlines()
+        for vocab in all_vocb:
+            all_ents.add(vocab.strip('\n'))
 
 get_scope_name_of_train_op = 'train_{}'.format
 get_scope_name_of_summary_op = 'summary_{}'.format

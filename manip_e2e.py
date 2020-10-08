@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Textontent Manipulation
+Text content Manipulation
 3-gated copy net.
 """
 

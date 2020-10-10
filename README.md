@@ -114,7 +114,7 @@ The cmd prints the two scores and the output is by default saved in `output/resu
 
 # Demo
 
-We provide a content rewritting demo based on our NLP toolkit [Forte](https://github.com/asyml/forte/tree/master/examples/content_rewriter), which can
+We provide a `content rewriter` demo based on our NLP toolkit [Forte](https://github.com/asyml/forte/tree/master/examples/content_rewriter), which can
  be visulized with [Stave](https://github.com/asyml/stave/blob/master/src/plugins/dialogue_box/READEME.md) as follows:
  
 <p align="center">

@@ -111,3 +111,12 @@ python3 bert_classifier_main.py  --do_pred --config_data=config_data --checkpoin
 [--output_dir=output_dir/]
 ```
 The cmd prints the two scores and the output is by default saved in `output/results_*.tsv`, where each line contains the predicted label for each instance.
+
+# Demo
+
+We provide a content rewritting demo based on our NLP toolkit [Forte](https://github.com/asyml/forte/tree/master/examples/content_rewriter), which can
+ be visulized with [Stave](https://github.com/asyml/stave/blob/master/src/plugins/dialogue_box/READEME.md) as follows:
+ 
+<p align="center">
+<img src="figures/demo.png" width="80%" height="60%" />
+</p>

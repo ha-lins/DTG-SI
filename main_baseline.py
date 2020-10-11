@@ -19,48 +19,38 @@ import pickle
 from collections import namedtuple
 from copy_net import CopyNetWrapper
 from texar.core import get_train_op
-from utils_e2e_clean import *
-from get_xx import get_match
-from get_xy import get_align
-# from ie import get_precrec
+from utils import *
+from ie import get_precrec
 
 flags = tf.flags
-flags.DEFINE_string("config_data", "config_data_e2e_clean", "The data config.")
-flags.DEFINE_string("config_model", "config_model_clean", "The model config.")
+flags.DEFINE_string("dataset", "nba", "The dataset.")
+flags.DEFINE_string("config_data", "config_data", "The data config.")
+flags.DEFINE_string("config_model", "config_model", "The model config.")
 flags.DEFINE_string("config_train", "config_train_baseline", "The training config.")
 flags.DEFINE_float("bt_w", 1, "Back-translation weight.")
 flags.DEFINE_float("adv_w", 0.5, "Adversarial loss weight.")
 ## MAST -- bt_w=0.1
-##AdvST -- bt_w=1 adv_w=0.5
+## AdvST -- bt_w=1 adv_w=0.5
 
-flags.DEFINE_string("expr_name", "nba_baseline", "The experiment name. "
-                    "Used as the directory name of run.")
+flags.DEFINE_string("save_path", "nba_baseline", "The save path of your "
+                                             "experiment. ")
 flags.DEFINE_string("restore_from", "", "The specific checkpoint path to "
                     "restore from. If not specified, the latest checkpoint in "
                     "expr_name is used.")
 flags.DEFINE_boolean("copy_x", False, "Whether to copy from x.")
-flags.DEFINE_boolean("copy_y_", False, "Whether to copy from y'.")
 flags.DEFINE_boolean("coverage", False, "Whether to add coverage onto the copynets.")
 flags.DEFINE_float("exact_cover_w", 0., "Weight of exact coverage loss.")
 flags.DEFINE_float("eps", 1e-10, "epsilon used to avoid log(0).")
 flags.DEFINE_integer("disabled_vocab_size", 0 , "Disabled vocab size.")
 flags.DEFINE_boolean("attn_x", False, "Whether to attend x.")
 flags.DEFINE_boolean("attn_y_", False, "Whether to attend y'.")
-flags.DEFINE_boolean("align", False, "Whether it is to get alignment.")
-flags.DEFINE_boolean("output_align", False, "Whether to output alignment.")
 flags.DEFINE_boolean("verbose", False, "verbose.")
 flags.DEFINE_boolean("eval_ie", False, "Whether evaluate IE.")
 flags.DEFINE_integer("eval_ie_gpuid", 0, "ID of GPU on which IE runs.")
-flags.DEFINE_boolean("sd_path", False, "Whether to add structured data path.")
-flags.DEFINE_float("sd_path_multiplicator", 1., "Structured data path multiplicator.")
-flags.DEFINE_float("sd_path_addend", 0., "Structured data path addend.")
 FLAGS = flags.FLAGS
 
 copy_flag = FLAGS.copy_x or FLAGS.copy_y_
 attn_flag = FLAGS.attn_x or FLAGS.attn_y_
-
-if FLAGS.output_align:
-    FLAGS.align = True
 
 config_data = importlib.import_module(FLAGS.config_data)
 config_model = importlib.import_module(FLAGS.config_model)
@@ -99,57 +89,6 @@ def get_optimistic_saver(ckpt_path, graph=tf.get_default_graph()):
         get_optimistic_restore_variables(ckpt_path, graph=graph))
 
 
-def print_alignment(data, sent, score):
-    print(' ' * 20 + ' '.join(map('{:>12}'.format, data[0])))
-    for j, sent_token in enumerate(sent[0]):
-        print('{:>20}'.format(sent_token) + ' '.join(map(
-            lambda x: '{:12.2e}'.format(x) if x != 0 else ' ' * 12,
-            score[:, j])))
-
-
-def batch_print_alignment(datas, sents, scores):
-    datas, sents = map(
-        lambda texts_lengths: map(
-            lambda text_length:
-                (text_length[0][:text_length[1]], text_length[1]),
-            zip(*texts_lengths)),
-        (datas, sents))
-    for data, sent, score in zip(datas, sents, scores):
-        score = score[:data[1], :sent[1]]
-        print_alignment(data, sent, score)
-
-
-def get_match_align(text00, text01, text02, text10, text11, text12, sent_text):
-    """Combining match and align. All texts must not contain BOS.
-    """
-    matches = get_match(text00, text01, text02, text10, text11, text12)
-    aligns = get_align(text10, text11, text12, sent_text)
-    match = {i: j for i, j in matches}
-    n = len(text00)
-    m = len(sent_text)
-    ret = np.zeros([n, m], dtype=np.float32)
-    for i in range(n):
-        try:
-            k = match[i]
-        except KeyError:
-            continue
-        align = aligns[k]
-        ret[i][:len(align)] = align
-
-    if FLAGS.verbose:
-        print(' ' * 20 + ' '.join(map(
-            '{:>12}'.format, strip_special_tokens_of_list(text00))))
-        for j, sent_token in enumerate(strip_special_tokens_of_list(sent_text)):
-            print('{:>20}'.format(sent_token) + ' '.join(map(
-                lambda x: '{:>12}'.format(x) if x != 0 else ' ' * 12,
-                ret[:, j])))
-
-    return ret
-
-def batch_get_match_align(*texts):
-    return np.array(batchize(get_match_align)(*texts), dtype=np.float32)
-
-
 def build_model(data_batch, data, step):
     batch_size, num_steps = [
         tf.shape(data_batch["x_value_text_ids"])[d] for d in range(2)]
@@ -185,9 +124,9 @@ def build_model(data_batch, data, step):
         for name, hparams in config_model.embedders.items()}
 
     # encoders
-    sent_encoder = tx.modules.BidirectionalRNNEncoder(
+    y_encoder = tx.modules.BidirectionalRNNEncoder(
         hparams=config_model.y_encoder)
-    sd_encoder = tx.modules.BidirectionalRNNEncoder(
+    x_encoder = tx.modules.BidirectionalRNNEncoder(
         hparams=config_model.x_encoder)
 
 
@@ -195,34 +134,33 @@ def build_model(data_batch, data, step):
         return tf.concat(outputs, -1)
 
 
-    def encode_sent(ids, length):
+    def encode_y(ids, length):
         embeds = embedders['y_aux'](ids)
-        enc_outputs, _ = sent_encoder(embeds, sequence_length=length)
+        enc_outputs, _ = y_encoder(embeds, sequence_length=length)
         enc_outputs = concat_encoder_outputs(enc_outputs)
         return Encoded(ids, embeds, enc_outputs, length)
 
 
-    def encode_sd(ids, length):
+    def encode_x(ids, length):
         embeds = tf.concat(
             [embedders['x_'+field](ids[field]) for field in x_fields],
             axis=-1)
-        enc_outputs, _ = sd_encoder(embeds, sequence_length=length)
+        enc_outputs, _ = x_encoder(embeds, sequence_length=length)
         enc_outputs = concat_encoder_outputs(enc_outputs)
         return Encoded(ids, embeds, enc_outputs, length)
 
 
-    sent_encoded = [
-        encode_sent(
+    y_encoded = [
+        encode_y(
             data_batch['{}_text_ids'.format(ref_str)],
             data_batch['{}_length'.format(ref_str)])
         for ref_str in y_strs]
-    sd_encoded = [
-        encode_sd(
+    x_encoded = [
+        encode_x(
             {field: data_batch['x{}_{}_text_ids'.format(ref_str, field)][:, 1:-1]
              for field in x_fields},
             data_batch['x{}_{}_length'.format(ref_str, x_fields[0])] - 2)
         for ref_str in ref_strs]
-    # print('[info]sdencoded:{}'.format(sd_encoded[0]))
 
     # get rnn cell
     rnn_cell = tx.core.layers.get_rnn_cell(config_model.rnn_cell)
@@ -321,12 +259,6 @@ def build_model(data_batch, data, step):
                         ret_x = tf.einsum("bim,bm->bi", memory, query)
                         ret.append(ret_x)
 
-                    if FLAGS.sd_path:
-                        ret_sd_path = FLAGS.sd_path_multiplicator * \
-                            tf.einsum("bi,bij->bj", ret_x, match_align) \
-                            + FLAGS.sd_path_addend
-                        ret.append(ret_sd_path)
-
                     return ret
 
                 return get_copy_scores
@@ -369,25 +301,25 @@ def build_model(data_batch, data, step):
         'get_decoder_and_outputs', get_decoder_and_outputs)
 
     def teacher_forcing(cell, y_, x_ref_flag, loss_name, add_bleu_weight=False):
-        x = sd_encoded[x_ref_flag]
+        x = x_encoded[x_ref_flag]
         tgt_ref_flag = x_ref_flag
-        tgt_str = '{}'.format(sent_fields[tgt_ref_flag])
+        tgt_str = y_strs[tgt_ref_flag]
         sequence_length = data_batch['{}_length'.format(tgt_str)] - 1
         decoder, tf_outputs, final_state, _ = get_decoder_and_outputs(
             cell, y_, x, tgt_ref_flag,
             {'decoding_strategy': 'train_greedy',
-             'inputs': sent_encoded[tgt_ref_flag].embeds,
+             'inputs': y_encoded[tgt_ref_flag].embeds,
              'sequence_length': sequence_length})
 
-        tgt_sent_ids = data_batch['{}_text_ids'.format(tgt_str)][:, 1:]
+        tgt_y_ids = data_batch['{}_text_ids'.format(tgt_str)][:, 1:]
         loss = tx.losses.sequence_sparse_softmax_cross_entropy(
-            labels=tgt_sent_ids,
+            labels=tgt_y_ids,
             logits=tf_outputs.logits,
             sequence_length=sequence_length,
             average_across_batch=False)
         if add_bleu_weight:
             w = tf.py_func(
-                batch_bleu, [y_.ids, tgt_sent_ids],
+                batch_bleu, [y_.ids, tgt_y_ids],
                 tf.float32, stateful=False, name='W_BLEU')
             w.set_shape(loss.get_shape())
             loss = w * loss
@@ -430,63 +362,6 @@ def build_model(data_batch, data, step):
         decoder, bs_outputs, bs_length = beam_searching(cell, y_, x, 1)
         return bs_outputs.predicted_ids[:, :, 0], bs_length[:, 0]
 
-
-    def build_align():
-        ref_str = ref_strs[1]
-        sent_str = '{}'.format(y_strs[1])
-        sent_texts = data_batch['{}_text'.format(sent_str)][:, 1:-1]
-        sent_ids = data_batch['{}_text_ids'.format(sent_str)][:, 1:-1]
-        #TODO: Here we simply use the embedder previously constructed,
-        #therefore it's shared. We have to construct a new one here if we'd
-        #like to get align on the fly.
-        sent_embeds = embedders['y_aux'](sent_ids)
-        sent_sequence_length = data_batch['{}_length'.format(sent_str)] - 2
-        sent_enc_outputs, _ = sent_encoder(
-            sent_embeds, sequence_length=sent_sequence_length)
-        sent_enc_outputs = concat_encoder_outputs(sent_enc_outputs)
-
-        sd_field = x_fields[0]
-        sd_str = 'x{}_{}'.format(ref_str, sd_field)
-        sd_texts = data_batch['{}_text'.format(sd_str)][:, :-1]
-        sd_ids = data_batch['{}_text_ids'.format(sd_str)]
-        tgt_sd_ids = sd_ids[:, 1:]
-        sd_ids = sd_ids[:, :-1]
-        sd_sequence_length = data_batch['{}_length'.format(sd_str)] - 1
-        sd_embedder = embedders['x_'+sd_field]
-
-        rnn_cell = tx.core.layers.get_rnn_cell(config_model.align_rnn_cell)
-        attention_decoder = tx.modules.AttentionRNNDecoder(
-            cell=rnn_cell,
-            memory=sent_enc_outputs,
-            memory_sequence_length=sent_sequence_length,
-            vocab_size=vocab.size,
-            hparams=config_model.align_attention_decoder)
-
-        tf_outputs, _, tf_sequence_length = attention_decoder(
-            decoding_strategy='train_greedy',
-            inputs=sd_ids,
-            embedding=sd_embedder,
-            sequence_length=sd_sequence_length)
-
-        loss = tx.losses.sequence_sparse_softmax_cross_entropy(
-            labels=tgt_sd_ids,
-            logits=tf_outputs.logits,
-            sequence_length=sd_sequence_length)
-
-        start_tokens = tf.ones_like(sd_sequence_length) * vocab.bos_token_id
-        end_token = vocab.eos_token_id
-        bs_outputs, _, _ = tx.modules.beam_search_decode(
-            decoder_or_cell=attention_decoder,
-            embedding=sd_embedder,
-            start_tokens=start_tokens,
-            end_token=end_token,
-            max_decoding_length=config_train.infer_max_decoding_length,
-            beam_width=config_train.infer_beam_width)
-
-        return (sent_texts, sent_sequence_length), (sd_texts, sd_sequence_length),\
-               loss, tf_outputs, bs_outputs
-
-
     discriminator = tx.modules.UnidirectionalRNNClassifier(hparams=config_model.discriminator)
     def disc(y, x):
         return discriminator(tf.concat([x.enc_outputs, y], axis=1))
@@ -494,22 +369,22 @@ def build_model(data_batch, data, step):
     joint_loss = 0.
     disc_loss = 0.
     for flag in range(2):
-        xe_decoder, xe_outputs, xe_loss = teacher_forcing(rnn_cell, sent_encoded[1-flag], flag, 'XE')
-        rec_decoder, rec_outputs, rec_loss = teacher_forcing(rnn_cell, sent_encoded[1-flag], 1-flag, 'REC')
+        xe_decoder, xe_outputs, xe_loss = teacher_forcing(rnn_cell, y_encoded[1-flag], flag, 'XE')
+        rec_decoder, rec_outputs, rec_loss = teacher_forcing(rnn_cell, y_encoded[1-flag], 1-flag, 'REC')
 
         # print('[info]rec_outputs is:{}'.format(rec_outputs.cell_output))
 
-        greedy_ids, greedy_length = greedy_decoding(rnn_cell, sent_encoded[1-flag], sd_encoded[flag])
+        greedy_ids, greedy_length = greedy_decoding(rnn_cell, y_encoded[1-flag], x_encoded[flag])
         greedy_ids = tf.concat([data_batch['y_aux_text_ids'][:, :1], tf.cast(greedy_ids, tf.int64)], axis=1)
         greedy_length = 1 + greedy_length
-        greedy_encoded = encode_sent(greedy_ids, greedy_length)
+        greedy_encoded = encode_y(greedy_ids, greedy_length)
 
         bt_decoder, _, bt_loss = teacher_forcing(rnn_cell, greedy_encoded, 1-flag, 'BT')
 
 
-        adv_loss = 2. * disc(rec_outputs.cell_output, sd_encoded[1-flag])[0][:, 1] \
-                 +      disc(xe_outputs.cell_output, sd_encoded[flag])[0][:, 0] \
-                 +      disc(rec_outputs.cell_output, sd_encoded[flag])[0][:, 0]
+        adv_loss = 2. * disc(rec_outputs.cell_output, x_encoded[1-flag])[0][:, 1] \
+                 +      disc(xe_outputs.cell_output, x_encoded[flag])[0][:, 0] \
+                 +      disc(rec_outputs.cell_output, x_encoded[flag])[0][:, 0]
         adv_loss = tf.reduce_mean(adv_loss, 0)
 
         disc_loss = disc_loss + adv_loss
@@ -521,11 +396,7 @@ def build_model(data_batch, data, step):
     losses['disc'] = disc_loss
 
     tiled_decoder, bs_outputs, _ = beam_searching(
-        rnn_cell, sent_encoded[1], sd_encoded[0], config_train.infer_beam_width)
-
-    align_sents, align_sds, align_loss, align_tf_outputs, align_bs_outputs = \
-        build_align()
-    losses['align'] = align_loss
+        rnn_cell, y_encoded[1], x_encoded[0], config_train.infer_beam_width)
 
     disc_variables = discriminator.trainable_variables
     other_variables = list(filter(lambda var: var not in disc_variables, tf.trainable_variables()))
@@ -541,8 +412,7 @@ def build_model(data_batch, data, step):
             hparams=config_train.train[name])
         for name in config_train.train}
 
-    return train_ops, bs_outputs, \
-           align_sents, align_sds, align_tf_outputs, align_bs_outputs
+    return train_ops, bs_outputs
 
 
 def main():
@@ -554,8 +424,7 @@ def main():
 
     global_step = tf.train.get_or_create_global_step()
 
-    train_ops, bs_outputs, \
-            align_sents, align_sds, align_tf_outputs, align_bs_outputs \
+    train_ops, bs_outputs\
         = build_model(data_batch, datasets['train'], global_step)
 
     summary_ops = {
@@ -599,33 +468,6 @@ def main():
 
         else:
             print('cannot find checkpoint directory {}'.format(directory))
-
-
-    def _get_alignment(sess, mode):
-        print('in _get_alignment')
-
-        data_iterator.restart_dataset(sess, mode)
-        feed_dict = {
-            tx.global_mode(): tf.estimator.ModeKeys.TRAIN,
-            data_iterator.handle: data_iterator.get_handle(sess, mode),
-        }
-
-        fetches = [
-            align_sds,
-            align_sents,
-            align_tf_outputs.attention_scores]
-
-        with open('align.pkl', 'wb') as out_file:
-            while True:
-                try:
-                    fetched = sess.run(fetches, feed_dict)
-                    batch_print_alignment(*fetched)
-
-                except tf.errors.OutOfRangeError:
-                    break
-
-        print('end _get_alignment')
-
 
     def _train_epoch(sess, summary_writer, mode, train_ops, summary_ops, names):
         print('in _train_epoch')
@@ -674,9 +516,6 @@ def main():
             [data_batch['y_aux_text'], data_batch['y_ref_text']],
             [data_batch['x_value_text'], data_batch['x_ref_value_text']],
             bs_outputs.predicted_ids,
-        ] if not FLAGS.align else [
-            [data_batch['x_value_text'], data_batch['x_ref_value_text']],
-            align_bs_outputs.predicted_ids,
         ]
 
         if not os.path.exists(dir_model):
@@ -722,14 +561,14 @@ def main():
 
         hypo_file.close()
 
-        # if FLAGS.eval_ie:
-        #     gold_file_name = os.path.join(
-        #         config_data.dst_dir, "gold.{}.txt".format(
-        #             config_data.mode_to_filemode[mode]))
-        #     inter_file_name = "{}.h5".format(hypo_file_name[:-len(".txt")])
-        #     prec, rec = get_precrec(
-        #         gold_file_name, hypo_file_name, inter_file_name,
-        #         gpuid=FLAGS.eval_ie_gpuid)
+        if FLAGS.eval_ie:
+            gold_file_name = os.path.join(
+                config_data.dst_dir, "gold.{}.txt".format(
+                    config_data.mode_to_filemode[mode]))
+            inter_file_name = "{}.h5".format(hypo_file_name[:-len(".txt")])
+            prec, rec = get_precrec(
+                gold_file_name, hypo_file_name, inter_file_name,
+                gpuid=FLAGS.eval_ie_gpuid)
 
         refs, entrys, hypos = zip(*ref_hypo_pairs)
         bleus = []
@@ -775,16 +614,11 @@ def main():
         else:
             _restore_from(dir_model)
 
-        if FLAGS.output_align:
-            _get_alignment(sess, 'train')
-            return
-
         summary_writer = tf.summary.FileWriter(
             dir_summary, sess.graph, flush_secs=30)
 
         epoch = 0
         while epoch < config_train.max_epochs:
-            #name = 'align' if FLAGS.align else 'joint'
             names = {'joint', 'disc'}
             train_ops = {name: train_ops[name] for name in names}
             summary_ops = {name: summary_ops[name] for name in names}

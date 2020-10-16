@@ -37,10 +37,10 @@ If you'd like to evaluate IE scores for the NBA dataset after training, you
 
 ## Data Preparation
 
-The dataset developed in the paper is in the [repo](https://github.com/ZhitingHu/text_content_manipulation). 
+The dataset developed in the paper is in the [repo](https://github.com/ha-lins/DTG-SI-data). 
 Clone the repo and move them into the current directory as:
 ```
-git clone https://github.com/ZhitingHu/text_content_manipulation
+git clone https://github.com/ha-lins/DTG-SI-data
 cd text_content_manipulation/
 mv nba_data/ ../nba_data
 mv e2e_data/ ../e2e_data

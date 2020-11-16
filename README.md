@@ -121,12 +121,8 @@ which processes the previous `[SAVE_PATH]/ckpt/hypos[STEP].valid.txt` into
 
 
 #### Classify and evaluate
-We provide a pretrained model of Bert classifier in the [link](https://drive
-.google.com/drive/folders/1jNaJ_R_f89G8xbAC8iwe49Yx_Z-LXr0i), which achieves
- 92% accuracy on the test set. Make sure that the pretrained model is put
-  into the `bert/classifier_ckpt/ckpt` directory. Before the evaluation for
-   content fidelity, remember to modify the file name of `config_data.py
-   ` manually. Then, run the following command to restore and compute the two content scores:
+We provide a pretrained model of Bert classifier in the [link](https://drive.google.com/drive/folders/1jNaJ_R_f89G8xbAC8iwe49Yx_Z-LXr0i), which achieves
+ 92% accuracy on the test set. Make sure that the pretrained model is put into the `bert/classifier_ckpt/ckpt` directory. Before the evaluation for content fidelity, remember to modify the file name of `config_data.py` manually. Then, run the following command to restore and compute the two content scores:
 
 ```bash
 cd bert/

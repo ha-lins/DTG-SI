@@ -141,3 +141,20 @@ We provide a `content rewriter` demo based on our NLP toolkit [Forte](https://gi
 <p align="center">
 <img src="figures/demo.png" width="80%" height="60%" />
 </p>
+
+## Note
+The previous version of this work was named `Text Content Manipulation`. The data used by our previous version is in the [repo](https://github.com/ZhitingHu/text_content_manipulation).
+
+# Citation
+If you use this code and the datasets for you research, please cite our paper.
+```
+@inproceedings{lin-etal-2020-data,
+    title = "Data-to-Text Generation with Style Imitation",
+    author = "Lin, Shuai and Wang, Wentao and Yang, Zichao and Liang, Xiaodan and Xu, Frank F. and Xing, Eric and Hu, Zhiting",
+    booktitle = "Findings of the ACL: EMNLP 2020",
+    year = "2020",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.findings-emnlp.144",
+    pages = "1589--1598"
+}
+```

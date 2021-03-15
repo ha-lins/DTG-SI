@@ -53,7 +53,7 @@ The following command illustrates how to run an experiment:
 python3 main_ours.py --copy_x --rec_w 0.8 --coverage --exact_cover_w 2.5 --dataset [nba/e2e] --save_path [nba_ours/e2e_ours]
 ```
 
-Where `[SAVE_PATH]` is the directory you'd like to store all the files related to your experiment, e.g. `my_expr`.
+Where `[SAVE_PATH]` is the directory to store `ckpt` and `log` files related to your experiment, e.g. `e2e_ours`.
 
 Note that the code will automatically restore from the previously saved latest checkpoint if it exists.
 
@@ -95,19 +95,19 @@ python3 prepare_data.py --save_path [SAVE_PATH] --step [STEP]
 [--vocab_file=bert_config/all.vocab.txt]
 [--tfrecord_output_dir=bert/E2E] 
 ```
-which processes the previous `[SAVE_PATH]/ckpt/hypos[STEP].valid.txt` into the above mentioned `x | y` fomat in TFRecord data files. Here:
+which processes the previously generated file(`[SAVE_PATH]/ckpt/hypos[STEP].valid.txt`) during training into the above mentioned `x | y` fomat in TFRecord data files. Here:
 
 * `max_seq_length`: The maxium length of sequence. This includes BERT special tokens that will be automatically added. Longer sequence will be trimmed.
 * `vocab_file`: Path to a vocabary file used for tokenization. 
-* `tfrecord_output_dir`: The output path where the resulting TFRecord files will be put in. Be default, it is set to `bert/E2E`.
+* `tfrecord_output_dir`: The output path where the resulting TFRecord files will be put in. Be default, it is set to `bert/e2e_preparation`.
 
 
 ### Restore and evaluate
-We provide a pretrained transformer classifier model [link](https://drive.google.com/drive/folders/1jNaJ_R_f89G8xbAC8iwe49Yx_Z-LXr0i), which achieves 92% accuracy on the test set. Make sure that the pretrained model is put into the `bert/classifier_ckpt/ckpt` directory. Before the evaluation for content, remember to modify the file name of `config_data.py` manually. Then, run the following command to restore and compute the two content scores:
+We provide a pretrained transformer classifier model [link](https://drive.google.com/drive/folders/1jNaJ_R_f89G8xbAC8iwe49Yx_Z-LXr0i), which achieves 92% accuracy on the test set. Make sure that the pretrained model is put into the `bert/classifier_ckpt/ckpt` directory. Before the evaluation for content, remember to modify the `test_hparam_1[dataset][files]` and `test_hparam_2[dataset][files]` of `config_data.py` manually. Then, run the following command to restore and compute the two content scores:
 
 ```bash
 cd bert/
 python3 bert_classifier_main.py  --do_pred --config_data=config_data --checkpoint=classifier_ckpt/ckpt/model.ckpt-13625
 [--output_dir=output_dir/]
 ```
-The cmd prints the two scores and the output is by default saved in `output/results_*.tsv`, where each line contains the predicted label for each instance.
+The cmd prints the two scores and the output is by default saved in `e2e_output/results_*.tsv`, where each line contains the predicted label for each instance.

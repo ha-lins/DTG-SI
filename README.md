@@ -10,7 +10,7 @@ This repo contains the code of the following paper:
 *Findings of EMNLP 2020*  
 
 ## Model Overview
-<p align="center">
+<p align="left">
 <img src="figures/overview.PNG" width="80%" height="60%" />
 </p>
 
@@ -122,7 +122,7 @@ The cmd prints the two scores and the output is by default saved in `e2e_output/
 We provide a content rewritting demo based on our NLP toolkit [Forte](https://github.com/asyml/forte/tree/master/examples/content_rewriter), which can
  be visulized with [Stave](https://github.com/asyml/stave/blob/master/src/plugins/dialogue_box/READEME.md) as follows:
 
-<p align="center">
+<p align="left">
 <img src="figures/demo.png" width="80%" height="60%" />
 </p>
 

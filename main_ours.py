@@ -24,10 +24,8 @@ flags.DEFINE_string("config_model", "config_model_clean", "The model config.")
 flags.DEFINE_string("config_train", "config_train", "The training config.")
 flags.DEFINE_float("rec_w", 0.8, "Weight of reconstruction loss.")
 flags.DEFINE_float("rec_w_rate", 0., "Increasing rate of rec_w.")
-flags.DEFINE_boolean("add_bleu_weight", False, "Whether to multiply BLEU weight"
-                                               " onto the first loss.")
-flags.DEFINE_string("save_path", "nba", "The save path of your experiment. "
-                                        "Used as the directory name of run.")
+flags.DEFINE_string("save_path", "nba_ours", "The save path of your "
+                                             "experiment. ")
 flags.DEFINE_string("restore_from", "", "The specific checkpoint path to "
                                         "restore from. If not specified, the latest checkpoint in "
                                         "save_path is used.")
@@ -296,13 +294,7 @@ def build_model(data_batch, data, step):
             logits=tf_outputs.logits,
             sequence_length=sequence_length,
             average_across_batch=False)
-        if FLAGS.add_bleu_weight and y__ref_flag is not None \
-                and tgt_ref_flag is not None and y__ref_flag != tgt_ref_flag:
-            w = tf.py_func(
-                batch_bleu, [y_ids[y__ref_flag], tgt_y_ids],
-                tf.float32, stateful=False, name='W_BLEU')
-            w.set_shape(loss.get_shape())
-            loss = w * loss
+
         loss = tf.reduce_mean(loss, 0)
 
         if copy_flag and FLAGS.exact_cover_w != 0:

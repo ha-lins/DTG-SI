@@ -8,6 +8,12 @@ This repo contains the code of the following paper:
 
 *Shuai Lin, Wentao Wang, Zichao Yang, Xiaodan Liang, Eric P. Xing, Zhiting Hu.*    
 *Findings of EMNLP 2020*  
+
+## Model Overview
+<p align="center">
+<img src="figures/overview.PNG" width="80%" height="60%" />
+</p>
+
 ## Requirements
 
 The code has been tested on:
@@ -111,3 +117,28 @@ python3 bert_classifier_main.py  --do_pred --config_data=config_data --checkpoin
 [--output_dir=output_dir/]
 ```
 The cmd prints the two scores and the output is by default saved in `e2e_output/results_*.tsv`, where each line contains the predicted label for each instance.
+
+## Demo
+We provide a content rewritting demo based on our NLP toolkit [Forte](https://github.com/asyml/forte/tree/master/examples/content_rewriter), which can
+ be visulized with [Stave](https://github.com/asyml/stave/blob/master/src/plugins/dialogue_box/READEME.md) as follows:
+
+<p align="center">
+<img src="figures/demo.png" width="80%" height="60%" />
+</p>
+
+## Note
+The previous version of this work was named `Text Content Manipulation`. The data used by our previous version is in the [repo](https://github.com/ZhitingHu/text_content_manipulation).
+
+## Citation
+If you use this code and the datasets for you research, please cite our paper.
+```
+@inproceedings{lin-etal-2020-data,
+    title = "Data-to-Text Generation with Style Imitation",
+    author = "Lin, Shuai and Wang, Wentao and Yang, Zichao and Liang, Xiaodan and Xu, Frank F. and Xing, Eric and Hu, Zhiting",
+    booktitle = "Findings of the ACL: EMNLP 2020",
+    year = "2020",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.findings-emnlp.144",
+    pages = "1589--1598"
+}
+```

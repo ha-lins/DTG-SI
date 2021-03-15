@@ -39,23 +39,23 @@ flags.DEFINE_integer(
     "max_seq_length", 128,
     "The maxium length of sequence, longer sequence will be trimmed.")
 flags.DEFINE_string(
-    "tfrecords_output_dir", 'bert/e2e_max5',
+    "tfrecords_output_dir", 'bert/e2e_preparation',
     "The output directory where the TFRecords files will be generated.")
 flags.DEFINE_bool(
     "do_lower_case", False,
     "Whether to lower case the input text. Should be True for uncased "
     "models and False for cased models.")
 flags.DEFINE_string(
-    "expr_name", "rule",
-    "The output directory where main_ours.py generate")
+    "save_path", "e2e_output",
+    "The saved directory during training, such as `e2e_ours` or `e2e_s2s`.")
 flags.DEFINE_string(
     "step", "0",
-    "The step to compute two scores")
+    "The training step  you'd like to evaluate")
 tf.logging.set_verbosity(tf.logging.INFO)
 FLAGS = flags.FLAGS
 
-expr_name = FLAGS.expr_name
-e2e_data_dir = "e2e_0512_max5/val"
+e2e_data_dir = "e2e_data/val"
+save_path = FLAGS.save_path
 step = FLAGS.step
 refs = ['', '_ref']
 
@@ -70,7 +70,7 @@ def prepare_data():
     #     "SST": "E2E",
     # }
     
-    data_dir = 'bert/{}'.format('e2e_max5')
+    data_dir = 'bert/{}'.format('e2e_preparation')
     # if FLAGS.task.upper() in task_datasets_rename:
     #     data_dir = 'data/{}'.format(
     #         task_datasets_rename[FLAGS.task])
@@ -110,6 +110,10 @@ def prepare_data():
         lines_type = f_type.readlines()
         lines_entry = f_entry.readlines()
         lines_entry_x = f_entry_x.readlines()
+<<<<<<< HEAD
+    with open("{}/ckpt/hypos.step{}.val.txt".format(save_path, step), 'r') as f_sent:
+=======
+>>>>>>> ba6f670ad0ad92117d3fba72640c77cf74b44639
         lines_sent = f_sent.readlines()
 
         for (idx_line, line_type) in enumerate(lines_type):
@@ -118,7 +122,12 @@ def prepare_data():
                 entry_list = lines_entry[idx_line].strip('\n').split(' ')
                 if (lines_entry_x[idx_line].find(entry_list[idx_val]) == -1):
                     neg_samp = attr + ' : ' + entry_list[idx_val] + ' | ' + lines_sent[idx_line]
+<<<<<<< HEAD
+                    with open("bert/e2e_preparation/{}.step{}.2.tsv".format(save_path, step), 'a') as f_w:
+                        f_w.write(neg_samp)
+=======
                     f_w.write(neg_samp)
+>>>>>>> ba6f670ad0ad92117d3fba72640c77cf74b44639
                         
     # Concat x with y and see whether x was compressed in y
     ref = refs[0]
@@ -132,13 +141,22 @@ def prepare_data():
 
         lines_type = f_type.readlines()
         lines_entry = f_entry.readlines()
+<<<<<<< HEAD
+    with open("{}/ckpt/hypos.step{}.val.txt".format(save_path, step), 'r') as f_sent:
+=======
+>>>>>>> ba6f670ad0ad92117d3fba72640c77cf74b44639
         lines_sent = f_sent.readlines()
         for (idx_line, line_type) in enumerate(lines_type):
             line_type = line_type.strip('\n').split(' ')
             for (idx_val, attr) in enumerate(line_type):
                 entry_list = lines_entry[idx_line].strip('\n').split(' ')
                 pos_samp = attr + ' : ' + entry_list[idx_val] + ' | ' + lines_sent[idx_line]
+<<<<<<< HEAD
+                with open("bert/e2e_preparation/{}.step{}.1.tsv".format(save_path, step), 'a') as f_w:
+                    f_w.write(pos_samp)
+=======
                 f_w.write(pos_samp)
+>>>>>>> ba6f670ad0ad92117d3fba72640c77cf74b44639
                         
     # Produces TFRecords files
     data_utils.prepare_TFRecord_data(
@@ -147,7 +165,7 @@ def prepare_data():
         data_dir=data_dir,
         max_seq_length=FLAGS.max_seq_length,
         output_dir=tfrecords_output_dir,
-        expr_name=expr_name,
+        expr_name=save_path,
         step=step)
     modify_config_data(FLAGS.max_seq_length, num_train_data, num_classes)
 

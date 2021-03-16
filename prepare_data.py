@@ -97,23 +97,14 @@ def prepare_data():
     #TO DO:Prepare data for the transformer classifier
     #i.e. Concat x' with y and see whether x' was compressed in y
     ref = refs[1]
-    with open(os.path.join(e2e_data_dir, "x{}_type.valid.txt".format(ref)),
-            'r') as f_type,\
-        open(os.path.join(e2e_data_dir, "x{}_value.valid.txt".format(ref)),
-            'r') as f_entry,\
-        open(os.path.join(e2e_data_dir, "x{}_value.valid.txt".format(refs[
-        0])), 'r') as f_entry_x,\
-        open("e2e_max5_output/{}/ckpt/hypos.step{}.val.txt".format(expr_name,
-            step), 'r') as f_sent,\
-        open("bert/e2e_max5/{}.step{}.2.tsv".format(expr_name, step), 'a') as f_w:
+    with open(os.path.join(e2e_data_dir, "x{}_type.valid.txt".format(ref)),'r') as f_type, \
+        open(os.path.join(e2e_data_dir, "x{}_value.valid.txt".format(ref)),'r') as f_entry,\
+        open(os.path.join(e2e_data_dir, "x{}_value.valid.txt".format(refs[0])), 'r') as f_entry_x,\
+        open("{}/ckpt/hypos.step{}.val.txt".format(save_path, step), 'r') as f_sent:
 
         lines_type = f_type.readlines()
         lines_entry = f_entry.readlines()
         lines_entry_x = f_entry_x.readlines()
-<<<<<<< HEAD
-    with open("{}/ckpt/hypos.step{}.val.txt".format(save_path, step), 'r') as f_sent:
-=======
->>>>>>> ba6f670ad0ad92117d3fba72640c77cf74b44639
         lines_sent = f_sent.readlines()
 
         for (idx_line, line_type) in enumerate(lines_type):
@@ -122,42 +113,26 @@ def prepare_data():
                 entry_list = lines_entry[idx_line].strip('\n').split(' ')
                 if (lines_entry_x[idx_line].find(entry_list[idx_val]) == -1):
                     neg_samp = attr + ' : ' + entry_list[idx_val] + ' | ' + lines_sent[idx_line]
-<<<<<<< HEAD
                     with open("bert/e2e_preparation/{}.step{}.2.tsv".format(save_path, step), 'a') as f_w:
                         f_w.write(neg_samp)
-=======
-                    f_w.write(neg_samp)
->>>>>>> ba6f670ad0ad92117d3fba72640c77cf74b44639
-                        
+
     # Concat x with y and see whether x was compressed in y
     ref = refs[0]
-    with open(os.path.join(e2e_data_dir, "x{}_type.valid.txt".format(ref)),
-            'r') as f_type,\
-        open(os.path.join(e2e_data_dir, "x{}_value.valid.txt".format(ref)),
-            'r') as f_entry,\
-        open("e2e_max5_output/{}/ckpt/hypos.step{}.val.txt".format(
-            expr_name, step), 'r') as f_sent, \
-        open("bert/e2e_max5/{}.step{}.1.tsv".format(expr_name, step), 'a') as f_w:
+    with open(os.path.join(e2e_data_dir, "x{}_type.valid.txt".format(ref)),'r') as f_type,\
+        open(os.path.join(e2e_data_dir, "x{}_value.valid.txt".format(ref)),'r') as f_entry, \
+        open("{}/ckpt/hypos.step{}.val.txt".format(save_path, step), 'r') as f_sent:
 
         lines_type = f_type.readlines()
         lines_entry = f_entry.readlines()
-<<<<<<< HEAD
-    with open("{}/ckpt/hypos.step{}.val.txt".format(save_path, step), 'r') as f_sent:
-=======
->>>>>>> ba6f670ad0ad92117d3fba72640c77cf74b44639
         lines_sent = f_sent.readlines()
         for (idx_line, line_type) in enumerate(lines_type):
             line_type = line_type.strip('\n').split(' ')
             for (idx_val, attr) in enumerate(line_type):
                 entry_list = lines_entry[idx_line].strip('\n').split(' ')
                 pos_samp = attr + ' : ' + entry_list[idx_val] + ' | ' + lines_sent[idx_line]
-<<<<<<< HEAD
                 with open("bert/e2e_preparation/{}.step{}.1.tsv".format(save_path, step), 'a') as f_w:
                     f_w.write(pos_samp)
-=======
-                f_w.write(pos_samp)
->>>>>>> ba6f670ad0ad92117d3fba72640c77cf74b44639
-                        
+
     # Produces TFRecords files
     data_utils.prepare_TFRecord_data(
         processor=processor,

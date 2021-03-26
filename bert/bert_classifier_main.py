@@ -323,12 +323,15 @@ def main(_):
 				break
 
 		output_file = os.path.join(FLAGS.output_dir, "rule_{}.tsv".format(which_score))
-		with tf.gfile.GFile(output_file, "w") as writer:
-			writer.write('\n'.join(str(p) for p in _all_preds))
+		# with tf.gfile.GFile(output_file, "w") as writer:
+		# 	writer.write('\n'.join(str(p) for p in _all_preds))
 		with tf.gfile.GFile(output_file, "w") as writer:
 			writer.write('content score_{0} is : {1:.4f}'.format(which_score, sum(_all_preds) / len(_all_preds)))
 
-		print('content score_{0} is : {1:.4f}'.format(which_score, sum(_all_preds) / len(_all_preds)))
+		if which_score == 1:
+			print('content score_{0} is : {1:.4f}'.format(which_score, sum(_all_preds) / len(_all_preds)))
+		else:
+			print('content score_{0} is : {1:.4f}'.format(which_score, 1 - sum(_all_preds) / len(_all_preds)))
 
 	# Loads pretrained BERT model parameters
 	# init_checkpoint = os.path.join(bert_pretrain_dir, 'bert_model.ckpt')

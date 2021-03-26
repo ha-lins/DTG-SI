@@ -109,8 +109,8 @@ def get_lr(global_step, num_train_steps, num_warmup_steps, static_lr):
         warmup_learning_rate = static_lr * warmup_percent_done
 
         is_warmup = tf.cast(global_steps_int < warmup_steps_int, tf.float32)
-        learning_rate = ((1.0 - is_warmup) * learning_rate\
-            +is_warmup * warmup_learning_rate)
+        learning_rate = ((1.0 - is_warmup) * learning_rate \
+                         +is_warmup * warmup_learning_rate)
 
     return learning_rate
 
@@ -170,7 +170,7 @@ def _get_assignment_map_from_checkpoint(tvars, init_checkpoint):
             if model_name == check_name:
                 model_name = check_name.replace('attention/output/LayerNorm',
                                                 'output/LayerNorm')
-            assert model_name in name_to_variable.keys(),\
+            assert model_name in name_to_variable.keys(), \
                 'model name:{} not exists!'.format(model_name)
 
             assignment_map[check_name] = model_name
@@ -190,7 +190,7 @@ def init_bert_checkpoint(init_checkpoint):
     initialized_variable_names = []
     if init_checkpoint:
         (assignment_map, initialized_variable_names
-        ) = _get_assignment_map_from_checkpoint(tvars, init_checkpoint)
+         ) = _get_assignment_map_from_checkpoint(tvars, init_checkpoint)
         tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
 
 def set_random_seed(myseed):

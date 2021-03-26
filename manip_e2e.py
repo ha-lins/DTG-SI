@@ -715,21 +715,13 @@ def main():
                 gold_file_name, hypo_file_name, inter_file_name,
                 gpuid=FLAGS.eval_ie_gpuid)
 
-        #print('========entry_texts are: {}'.format(entry_texts[:10]))
         refs, entrys, hypos = zip(*ref_hypo_pairs)
 
-        #refs_ = list(zip(*refs))
         bleus = []
         get_bleu_name = '{}_BLEU'.format
-        #print('In {} mode:'.format(mode))
-        #print('====refs_ is: {}'.format(refs[:10]))
-        #print('====entrys is :{}'.format(entrys[:10]))
-        #print('====hypos are :{}'.format(hypos[:10]))
-        #print('====length of fetches[0] is :{}'.format(len(fetches[0])))
         for i in range(1, 2):
             refs_ = list(map(lambda ref: ref[i:i+1], refs))
             ents_ = list(map(lambda ent: ent[i:i+1], entrys))
-            #print('===========refs_ is :{}'.format(refs_[:10]))
             entrys = list(zip(*entrys))
             #bleu = corpus_bleu(refs_, ents_, hypos, entrys[0])
             bleu = corpus_bleu(refs_, hypos)

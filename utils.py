@@ -53,11 +53,18 @@ def strip_special_tokens_of_list(text):
 batch_strip_special_tokens_of_list = batchize(strip_special_tokens_of_list)
 
 def replace_data_in_sent(sent, token="<UNK>"):
-    datas = extract_entities(sent, all_ents) + extract_numbers(sent)
-    datas.sort(key=lambda data: data.start, reverse=True)
-    for data in datas:
-        sent[data.start: data.end] = token
-    return sent
+    if 'nba' in flags.config_data:
+        datas = extract_entities(sent, all_ents) + extract_numbers(sent)
+        datas.sort(key=lambda data: data.start, reverse=True)
+        for data in datas:
+            sent[data.start: data.end] = token
+        return sent
+    else:
+        datas = extract_entities(sent, all_ents)
+        datas.sort(key=lambda data: data.start, reverse=True)
+        for data in datas:
+            sent[data.start] = token
+        return sent
 
 def corpus_bleu(list_of_references, hypotheses, **kwargs):
     list_of_references = [

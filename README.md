@@ -19,14 +19,15 @@ This repo contains the code of the following paper:
 The code has been tested on:
  - `Python 3.6.0 and Python 3.7.6`
  - `tensorflow-gpu==1.14.0`
- - `texar-tf==0.1`
  - `cuda 10.0`
+ - `texar-tf==0.2.0-unreleased`
+
  
 ** NOTE **: 
-Due to some compatibility issues, the repo is only compatible by installing `texar==0.2.1` from source, which is as follows:
+If you would like to evaluate the content score for E2E data, you need to install `texar==0.2.0-unreleased`, which is provided [here](https://drive.google.com/file/d/1_3h8nDg12IGfJxqgmTN5o0PphTQ9i2Dh/view?usp=sharing):
+Pls download， unzip and install from source: 
 ```bash
-wget https://github.com/asyml/texar/archive/refs/tags/v0.1.0.zip
-cd texar && pip install .
+pip install .
 ```
  
 Run the following command:

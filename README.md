@@ -19,7 +19,7 @@ This repo contains the code of the following paper:
 The code has been tested on:
  - `Python 3.6.0 and Python 3.7.6`
  - `tensorflow-gpu==1.12.0`
- - `cuda 10.0`
+ - `cuda 9.0`
  - `texar-tf==0.2.0-unreleased`
 
  

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Text content Manipulation
+Text Content Manipulation
 3-gated copy net.
 """
 
@@ -18,20 +18,20 @@ import texar as tx
 import pickle
 from copy_net import CopyNetWrapper
 from texar.core import get_train_op
-from utils_e2e_clean import *
+from utils import *
 from get_xx import get_match
 from get_xy import get_align
-# from ie import get_precrec
+from ie import get_precrec
 
 flags = tf.flags
-flags.DEFINE_string("config_data", "config_data_e2e_clean", "The data config.")
+flags.DEFINE_string("config_data", "config_data", "The data config.")
 flags.DEFINE_string("config_model", "config_model", "The model config.")
 flags.DEFINE_string("config_train", "config_train", "The training config.")
 flags.DEFINE_float("rec_w", 0.8, "Weight of reconstruction loss.")
 flags.DEFINE_float("rec_w_rate", 0., "Increasing rate of rec_w.")
 flags.DEFINE_boolean("add_bleu_weight", False, "Whether to multiply BLEU weight"
                                                " onto the first loss.")
-flags.DEFINE_string("expr_name", "e2e_dis_max5_output/wo1", "The experiment name. "
+flags.DEFINE_string("expr_name", "nba", "The experiment name. "
                                         "Used as the directory name of run.")
 flags.DEFINE_string("restore_from", "", "The specific checkpoint path to "
                                         "restore from. If not specified, the latest checkpoint in "
@@ -41,7 +41,7 @@ flags.DEFINE_boolean("copy_y_", False, "Whether to copy from y'.")
 flags.DEFINE_boolean("coverage", False, "Whether to add coverage onto the copynets.")
 flags.DEFINE_float("exact_cover_w", 0., "Weight of exact coverage loss.")
 flags.DEFINE_float("eps", 1e-10, "epsilon used to avoid log(0).")
-flags.DEFINE_integer("disabled_vocab_size", 0, "Disabled vocab size.")
+flags.DEFINE_integer("disabled_vocab_size", 1272, "Disabled vocab size.")
 flags.DEFINE_boolean("attn_x", False, "Whether to attend x.")
 flags.DEFINE_boolean("attn_y_", False, "Whether to attend y'.")
 flags.DEFINE_boolean("sd_path", False, "Whether to add structured data path.")
@@ -52,6 +52,8 @@ flags.DEFINE_boolean("output_align", False, "Whether to output alignment.")
 flags.DEFINE_boolean("verbose", False, "verbose.")
 flags.DEFINE_boolean("eval_ie", False, "Whether evaluate IE.")
 flags.DEFINE_integer("eval_ie_gpuid", 0, "ID of GPU on which IE runs.")
+flags.DEFINE_string("save_path", "nba_ours", "The save path of your "
+                                             "experiment. ")
 FLAGS = flags.FLAGS
 
 copy_flag = FLAGS.copy_x or FLAGS.copy_y_
@@ -507,8 +509,8 @@ def build_model(data_batch, data, step):
     #tf.Print('===========rec_w is {}'.format(rec_weight[0]))
 
     step_stage = tf.cast(step, tf.float32) / tf.constant(600.0)
-    rec_weight = tf.case([(tf.less_equal(step_stage, tf.constant(1.0)), lambda:tf.constant(1.0)),\
-                         (tf.greater(step_stage, tf.constant(2.0)), lambda:FLAGS.rec_w)],\
+    rec_weight = tf.case([(tf.less_equal(step_stage, tf.constant(1.0)), lambda:tf.constant(1.0)), \
+                          (tf.greater(step_stage, tf.constant(2.0)), lambda:FLAGS.rec_w)], \
                          default=lambda:tf.constant(1.0) - (step_stage - 1) * (1 - FLAGS.rec_w))
     joint_loss = (1 - rec_weight) * loss + rec_weight * rec_loss
     losses['joint'] = joint_loss

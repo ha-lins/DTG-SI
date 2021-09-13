@@ -56,6 +56,11 @@ mv e2e_data/ ../e2e_data
 
 The following command illustrates how to run an experiment:
 
+For e2e data:
+```bash
+python3 manip_e2e.py --attn_x --attn_y_ --copy_x --rec_w 0.8 --coverage --exact_cover_w 2.5 --expr_name e2e_output
+```
+[To Be Updated]
 ```bash
 python3 main_ours.py --copy_x --rec_w 0.8 --coverage --exact_cover_w 2.5 --dataset [nba/e2e] --save_path [nba_ours/e2e_ours]
 ```
